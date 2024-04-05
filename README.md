@@ -14,3 +14,35 @@ This repository will contain the analysis code for computational and statistical
 
 ![Tenk10K](https://github.com/powellgenomicslab/tenk10k_phase1_multiome/blob/main/Figures/TenK10K_icon_poster.png)
 
+# Pilot data processing
+
+We obtained two sets of pilot data from BioHeart and LBIO cohorts.
+**BioHeart**: 4 pools and 16 individuals per pool (generated back in 2022)
+**LIBIO**: 4 pools and 8 individuals per pool (currently undergoing)
+
+## Preprocessing
+
+- Reads alignment (cell ranger ARC)
+- Ambient RNA detection
+- Demultiplexing and doublet detection
+- Cell type annotation
+- Batch correction
+- Multi-omics layers integration
+- QC & Normalisation
+
+## ATAC-seq processing
+
+- Peak calling by MACS2
+- DNA accessibility process by latent semantic indexing (LSI)
+- Create a gene activity matrix
+- Clustering using Azimuth / label transferring
+- Verify with scRNA-seq data
+- Generate Peak Count matrix
+
+## caQTL mapping
+
+- To be updated
+
+
+
+
