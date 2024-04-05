@@ -17,7 +17,9 @@ This repository will contain the analysis code for computational and statistical
 # Pilot data processing
 
 We obtained two sets of pilot data from BioHeart and LBIO cohorts.
+
 **BioHeart**: 4 pools and 16 individuals per pool (generated back in 2022)
+
 **LIBIO**: 4 pools and 8 individuals per pool (currently undergoing)
 
 ## Preprocessing
