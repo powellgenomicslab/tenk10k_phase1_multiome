@@ -45,6 +45,12 @@ We obtained two sets of pilot data from BioHeart and LBIO cohorts.
 
 - To be updated
 
+# Data generation tracking (ATAC-seq)
+1st batch: Aug 12nd 2024, 8 libraries. 4 pools and 32 TOB individuals (each pool repeated twice).
+
+
+
+
 
 
 
