@@ -47,10 +47,18 @@ We obtained two sets of pilot data from BioHeart and LBIO cohorts.
 
 - To be updated
 
+## Gene regulatory network inference
+
+- To be updated
+
 # Data generation tracking (ATAC-seq)
-1st batch: Received on Aug 12nd 2024 (`240807`). 8 libraries, 4 pools, and 32 TOB individuals (each pool repeated twice).
+1st batch: Received on Aug 12nd 2024 (`240807`). 8 libraries, 4 pools, and 32 TOB individuals
+2nd batch: Received on Sep 05th 2024 (`240905`). 8 libraries, 4 pools, and 32 TOB individuals
+3rd batch: Received on Oct 02nd 2024 (`241002`). 20 libraries, 11 pools, and 88 TOB individuals
+4th batch: Received on Oct 08th 2024 (`241008`). 11 libraries, 7 pools, and 56 TOB individuals
+5th batch: Received on Oct 10th 2024 (`241010`). 10 libraries, 6 pools, and 48 TOB individuals
 
-
+Note: each pool contains 8 donors and was captured/sequenced twice
 
 
 
