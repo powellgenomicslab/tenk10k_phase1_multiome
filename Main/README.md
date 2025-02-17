@@ -5,10 +5,11 @@
 2. Demultiplexing and doublet detection
 3. QC and preprocessing
 4. Cell type annotation
-5. Batch correction
-6. Pseudobulking
-7. caQTL using TensorQTL
-8. caQTL using RASQUAL
-9. Colocalisation
-10. Causal inference
-11. Gene regulatory network inference
+5. Recall peaks within each cell type
+6. Batch correction
+7. Pseudobulking
+8. caQTL using TensorQTL
+9. caQTL using RASQUAL
+10. Colocalisation
+11. Causal inference
+12. Gene regulatory network inference
