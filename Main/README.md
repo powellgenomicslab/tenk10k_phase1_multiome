@@ -2,7 +2,7 @@
 
 
 1. Reads alignment using CellRanger
-2. Demultiplexing
+2. Demultiplexing and doublet detection
 3. QC and preprocessing
 4. Cell type annotation
 5. Batch correction
