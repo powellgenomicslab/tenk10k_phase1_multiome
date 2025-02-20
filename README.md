@@ -20,11 +20,11 @@ We will include 952 TOB individuals for scATAC-seq, 48 BioHear Individuals and 2
 
 We obtained three sets of scATAC/Multiome data from TOB, BioHeart and LBIO cohorts.
 
-**TOB**: 119 pools (238 libraries) and 8 individuals per pool (generated in 2024)
+**TOB**: 952 donors, 119 pools (238 libraries) and 8 individuals per pool (generated in 2024)
 
-**BioHeart**: 4 pools and 16 individuals per pool (generated back in 2022)
+**BioHeart**: 64 donors, 4 pools and 16 individuals per pool (generated back in 2022)
 
-**LIBIO**: 4 pools and 6-8 individuals per pool (generated back in 2023)
+**LIBIO**: 27 donors, 4 pools and 6-8 individuals per pool (generated back in 2023)
 
 ## Preprocessing
 
