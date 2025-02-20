@@ -10,19 +10,21 @@ TenK10K is a population cohort that will profile single-cell RNA-seq data of ~50
 <!-- potentially also from [HOPE Research Program](https://www.garvan.org.au/research/collaboration/hope-research) -->
 This repository will contain the analysis code for computational and statistical analyses of TenK10K phase 1 ATAC/multiome data, with a focus on caQTL (i.e., SNPs associated with chromatin accessibility levels) and multi-omics integration.
 
-We will include 952 TOB individuals for scATAC-seq and 48 LIBIO individuals for muliome data.
+We will include 952 TOB individuals for scATAC-seq, 48 BioHear Individuals and 27 LIBIO individuals for muliome data.
 
 <br>
 
 ![Tenk10K](https://github.com/powellgenomicslab/tenk10k_phase1_multiome/blob/main/Figures/TenK10K_icon_poster.png)
 
-# Pilot data processing
+# Main data for this project
 
-We obtained two sets of pilot data from BioHeart and LBIO cohorts.
+We obtained three sets of scATAC/Multiome data from TOB, BioHeart and LBIO cohorts.
+
+**TOB**: 119 pools (238 libraries) and 8 individuals per pool (generated in 2024)
 
 **BioHeart**: 4 pools and 16 individuals per pool (generated back in 2022)
 
-**LIBIO**: 4 pools and 8 individuals per pool (currently undergoing)
+**LIBIO**: 4 pools and 6-8 individuals per pool (generated back in 2023)
 
 ## Preprocessing
 
@@ -51,17 +53,39 @@ We obtained two sets of pilot data from BioHeart and LBIO cohorts.
 
 - To be updated
 
-# Data generation tracking (ATAC-seq)
-1st batch: Received on Aug 12nd 2024 (`240807`). 8 libraries, 4 pools, and 32 TOB individuals
+# Data generation tracking (scATAC-seq for TOB cohort)
+1st batch: Received on Aug 12nd 2024 (`240807`). 8 libraries from 4 pools.
 
-2nd batch: Received on Sep 05th 2024 (`240905`). 8 libraries, 4 pools, and 32 TOB individuals
+2nd batch: Received on Sep 05th 2024 (`240905`). 8 libraries from 4 pools.
 
-3rd batch: Received on Oct 02nd 2024 (`241002`). 20 libraries, 11 pools, and 88 TOB individuals
+3rd batch: Received on Oct 02nd 2024 (`241002`). 20 libraries, from 11 pools.
 
-4th batch: Received on Oct 08th 2024 (`241008`). 11 libraries, 7 pools, and 56 TOB individuals
+4th batch: Received on Oct 08th 2024 (`241008`). 11 libraries, from 7 pools.
 
-5th batch: Received on Oct 10th 2024 (`241010`). 10 libraries, 6 pools, and 48 TOB individuals
+5th batch: Received on Oct 10th 2024 (`241010`). 10 libraries, from 6 pools.
 
+6th batch: Received on Oct 15th 2024 (`241015`). 28 libraries, from 13 pools.
+
+7th batch: Received on Oct 18th 2024 (`241018`). 6 libraries from 4 pools.
+
+8th batch: Received on Nov 01st 2024 (`241101`). 7 libraries, from 5 pools.
+
+9th batch: Received on Nov 04th 2024 (`241104`). 7 libraries from 4 pools.
+
+10th batch: Received on Nov 06th 2024 (`241106`). 14 libraries, from 8 pools.
+
+11st batch: Received on Nov 08nd 2024 (`241108`). 21 libraries, from 11 pools.
+
+12nd batch: Received on Nov 11st 2024 (`241111`). 21 libraries, from 11 pools.
+
+13rd batch: Received on Dec 02nd 2024 (`241202`). 31 libraries, from 17 pools.
+
+14th batch: Received on Dec 04th 2024 (`241204`). 30 libraries, from 15 pools.
+
+15th batch: Received on Dec 06th 2024 (`241206`). 16 libraries, from 8 pools.
+
+
+In total, there are 238 scATAC-seq libraries from 119 pools
 
 Note: each pool contains 8 donors and was captured/sequenced twice
 
