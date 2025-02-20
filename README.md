@@ -10,7 +10,7 @@ TenK10K is a population cohort that will profile single-cell RNA-seq data of ~50
 <!-- potentially also from [HOPE Research Program](https://www.garvan.org.au/research/collaboration/hope-research) -->
 This repository will contain the analysis code for computational and statistical analyses of TenK10K phase 1 ATAC/multiome data, with a focus on caQTL (i.e., SNPs associated with chromatin accessibility levels) and multi-omics integration.
 
-We will include 952 TOB individuals for scATAC-seq, 48 BioHear Individuals and 27 LIBIO individuals for muliome data.
+We will include 952 TOB individuals for scATAC-seq, 36 BioHeart Individuals and 27 LIBIO individuals for muliome data.
 
 <br>
 
@@ -18,11 +18,11 @@ We will include 952 TOB individuals for scATAC-seq, 48 BioHear Individuals and 2
 
 # Main data for this project
 
-We obtained three sets of scATAC/Multiome data from TOB, BioHeart and LBIO cohorts.
+We obtained PBMCs of 1015 individuals from three sets of scATAC/Multiome data from TOB, BioHeart and LBIO cohorts.
 
 **TOB**: 952 donors, 119 pools (238 libraries) and 8 individuals per pool (generated in 2024)
 
-**BioHeart**: 64 donors, 4 pools and 16 individuals per pool (generated back in 2022)
+**BioHeart**: 48 donors, 3 pools and 16 individuals per pool (generated back in 2022)
 
 **LIBIO**: 27 donors, 4 pools and 6-8 individuals per pool (generated back in 2023)
 
