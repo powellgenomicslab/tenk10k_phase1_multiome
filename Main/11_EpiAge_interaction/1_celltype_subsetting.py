@@ -1,3 +1,14 @@
+#!/usr/bin/env python3
+"""
+Cell Type Subsetting for Single-Cell ATAC-seq Analysis
+
+This script processes merged single-cell ATAC-seq data and creates cell type-specific
+subsets for downstream epigenetic age analysis. It performs donor-stratified sampling
+to ensure balanced representation across individuals and selects highly variable peaks.
+
+Author: Peter C Allen
+"""
+
 import scanpy as sc
 import numpy as np
 import pandas as pd
@@ -11,40 +22,48 @@ h5ad_files = [os.path.join(data_dir, f) for f in os.listdir(data_dir) if f.endsw
 # Load all files
 adatas = [sc.read_h5ad(f) for f in h5ad_files]
 
-# Merge them – inner join to keep only common genes, or outer to keep all
+# Merge 
 merged_adata = adatas[0].concatenate(adatas[1:], join='inner', batch_key='sample_pool')
 
-# Optional: save the merged file
 merged_adata.write("output/20250630_celltype_subsets/repeat1_merged_dataset.h5ad") # AnnData object with n_obs × n_vars = 3546117 × 440996
-
-# merged_adata = load_and_merge_h5ad_files(directory) # AnnData object with n_obs × n_vars = 3546117 × 440996
-
-merged_adata = sc.read_h5ad("output/20250630_celltype_subsets/repeat1_merged_dataset.h5ad")
 
 np.random.seed(602)
 
-total_cells_target = 250000
-top_features = 200000
+# Configuration parameters
+total_cells_target = 250000  # Maximum cells per cell type
+top_features = 200000        # Number of most variable peaks to retain
 output_root = "output/20250630_celltype_subsets"
 
+# Create output directory
 os.makedirs(output_root, exist_ok=True)
 
-# Iterate through unique predicted.id values
-for cell_type in merged_adata.obs['predicted.id'].unique():
-    print(f"Processing {cell_type}...")
+# Load the merged dataset (already processed and saved)
+print(f"Dataset: {merged_adata.n_obs:,} cells × {merged_adata.n_vars:,} peaks")
 
-    # Filter for the current cell type
+# Process each cell type separately
+cell_types = merged_adata.obs['predicted.id'].unique()
+print(f"Processing {len(cell_types)} cell types...")
+
+for cell_type in cell_types:
+    print(f"\nProcessing {cell_type}...")
+
+    # Extract cells for this cell type
     ct_data = merged_adata[merged_adata.obs['predicted.id'] == cell_type].copy()
     n_cells = ct_data.n_obs
+    
+    print(f"  Found {n_cells:,} cells")
 
     if n_cells <= total_cells_target:
-        print(f"  Using all {n_cells} cells (less than or equal to target).")
+        print(f"  Using all {n_cells:,} cells (below target)")
         subset_data = ct_data
     else:
+        # Perform donor-stratified sampling to maintain representation balance
         donor_ids = ct_data.obs['donor_id'].unique()
         cells_per_donor = total_cells_target // len(donor_ids)
         sampled_indices = []
 
+        print(f"  Sampling {cells_per_donor:,} cells per donor from {len(donor_ids)} donors")
+        
         for donor in donor_ids:
             donor_data = ct_data[ct_data.obs['donor_id'] == donor]
             n = min(cells_per_donor, donor_data.n_obs)
@@ -52,29 +71,36 @@ for cell_type in merged_adata.obs['predicted.id'].unique():
             sampled_indices.extend(sampled)
 
         subset_data = ct_data[sampled_indices].copy()
-        print(f"  Sampled {len(sampled_indices)} cells from {len(donor_ids)} donors.")
+        print(f"  Sampled {len(sampled_indices):,} cells total")
 
-    # Subset to top highly variable genes/features
+    # Select most variable peaks to reduce dimensionality
     sc.pp.highly_variable_genes(subset_data, n_top_genes=top_features, subset=True)
-    print(f"  Selected top {top_features} variable features.")
+    print(f"  Selected {top_features:,} most variable peaks")
 
-    # Prepare output directory
+    # Save data in MTX format for downstream analysis
     celltype_dir = os.path.join(output_root, cell_type.replace(" ", "_"))
     os.makedirs(celltype_dir, exist_ok=True)
 
-    # Base filename prefix
     base_name = f"{cell_type}_subset"
 
-    # Save MTX matrix
-    scipy.io.mmwrite(os.path.join(celltype_dir, f"{base_name}_matrix.mtx"), subset_data.X.astype("float32"))
+    # Save count matrix
+    scipy.io.mmwrite(os.path.join(celltype_dir, f"{base_name}_matrix.mtx"), 
+                     subset_data.X.astype("float32"))
 
-    # Save barcodes (cell names)
-    pd.DataFrame(subset_data.obs.index).to_csv(os.path.join(celltype_dir, f"{base_name}_rep1_barcodes.tsv"), index=False, header=False)
+    # Save cell barcodes
+    pd.DataFrame(subset_data.obs.index).to_csv(
+        os.path.join(celltype_dir, f"{base_name}_rep1_barcodes.tsv"), 
+        index=False, header=False)
 
-    # Save features (gene or peak names)
-    pd.DataFrame(subset_data.var.index).to_csv(os.path.join(celltype_dir, f"{base_name}_rep1_features.tsv"), index=False, header=False)
+    # Save peak names
+    pd.DataFrame(subset_data.var.index).to_csv(
+        os.path.join(celltype_dir, f"{base_name}_rep1_features.tsv"), 
+        index=False, header=False)
 
-    # Save metadata
-    subset_data.obs.to_csv(os.path.join(celltype_dir, f"{base_name}_rep1_metadata.csv"))
+    # Save cell metadata
+    subset_data.obs.to_csv(
+        os.path.join(celltype_dir, f"{base_name}_rep1_metadata.csv"))
 
-    print(f"  Saved MTX + metadata to {celltype_dir}\n")
+    print(f"  Saved to {celltype_dir}")
+
+print("\nCell type subsetting completed successfully!")

@@ -1,3 +1,14 @@
+#!/usr/bin/env python3
+"""
+Genotype × Epigenetic Age Interaction Results Visualization
+
+This script processes and visualizes the results from genotype-epigenetic age 
+interaction analyses across all cell types. It creates summary plots showing
+the distribution of significant interactions and their characteristics.
+
+Author: Peter C Allen
+"""
+
 import glob
 import os
 import pandas as pd
@@ -8,46 +19,55 @@ from scipy.stats import binomtest
 import gzip
 import re
 
+# Configuration
 input_dir = "output/4-regression-results"
+output_dir = "figures/interaction-analysis"
+os.makedirs(output_dir, exist_ok=True)
+
+print("Processing genotype × epigenetic age interaction results...")
+
+# Find all interaction results files
 file_paths = glob.glob(os.path.join(input_dir, "interaction_results_*_chr[0-9]*.csv"))
-cell_types = list({re.sub(r".*_(results_|SNP)(.*)_chr\d+\.csv", r"\2", os.path.basename(fp)) for fp in file_paths})
+cell_types = list({re.sub(r".*_results_(.+)_chr\d+\.csv", r"\1", os.path.basename(fp)) for fp in file_paths})
 
+print(f"Found results for {len(cell_types)} cell types")
+
+# Combine results by cell type
 for cell_type in cell_types:
-    # Filter file paths for the current cell type
+    print(f"Processing {cell_type}...")
+    
+    # Find all chromosome files for this cell type
     cell_type_files = [fp for fp in file_paths if re.search(rf"interaction_results_{cell_type}_chr\d+\.csv", os.path.basename(fp))]
-
-    # Import and combine all files into a single DataFrame
+    
+    if not cell_type_files:
+        continue
+    
+    # Combine results across chromosomes
     combined_results = pd.concat([pd.read_csv(f) for f in cell_type_files], ignore_index=True)
-
-    # Sort by adj_pval
     combined_results = combined_results.sort_values('adj_pval')
-
-    # Save the combined results to a CSV file
-    output_path = f"output/4-regression-results/combined_results_{cell_type}.csv"
+    
+    # Save combined results
+    output_path = f"{input_dir}/combined_results_{cell_type}.csv"
     combined_results.to_csv(output_path, index=False)
 
-# Path pattern for the CSV files
-file_pattern = 'output/4-regression-results/combined*.csv'
+# Combine all cell types for overall analysis
+print("Combining results across all cell types...")
+combined_files = glob.glob(f'{input_dir}/combined_results_*.csv')
+all_results = []
 
-# List to hold individual DataFrames
-dfs = []
-
-for filepath in glob.glob(file_pattern):
-    # Extract filename
-    filename = os.path.basename(filepath)
-    # Extract cell type name
-    cell_type = filename.replace('combined_results_', '').replace('.csv', '')
-    # Read CSV
+for filepath in combined_files:
+    cell_type = os.path.basename(filepath).replace('combined_results_', '').replace('.csv', '')
     df = pd.read_csv(filepath)
-    # Add cell type column
     df['cell_type'] = cell_type
-    dfs.append(df)
+    all_results.append(df)
 
-# Combine all DataFrames
-combined_df = pd.concat(dfs, ignore_index=True)
+# Create master dataframe
+combined_df = pd.concat(all_results, ignore_index=True)
+print(f"Total tests performed: {len(combined_df):,}")
 
 # Filter for significant results
-filtered_df = combined_df[combined_df['adj_pval'] < 0.05]
+significant_df = combined_df[combined_df['adj_pval'] < 0.05]
+print(f"Significant interactions (FDR < 0.05): {len(significant_df):,}")
 
 # Load color palette
 palette_df = pd.read_csv("data/colour_palette_table.tsv", sep="\t")
@@ -223,33 +243,16 @@ print(f"Binomial test p-value (positive > negative): {p_value.pvalue:.4g}")
 # Identify the strongest positive and negative estimates with MAF greater than 0.12
 filtered_df['cell_type'] = filtered_df['cell_type_x']
 
-strongest_positive = filtered_df[(filtered_df['Estimate'] > 0) & (filtered_df['MAF'] > 0.12)].nlargest(50, 'Estimate')
+# strongest_positive = filtered_df[(filtered_df['Estimate'] > 0) & (filtered_df['MAF'] > 0.12)].nlargest(50, 'Estimate')
 # strongest_negative = filtered_df[(filtered_df['Estimate'] < 0) & (filtered_df['MAF'] > 0.12)].nsmallest(5, 'Estimate')
 # strongest_positive = strongest_positive[strongest_positive['peak'].str.contains('chr6:31243369')]
 # GWAS hits table (replace this with your actual DataFrame)
 gwas_hits_table = pd.DataFrame({
-    "cell_type": [
-        "B_intermediate", "B_intermediate", "B_naive", "B_naive", "B_naive", "B_naive",
-        "CD14_Mono", "CD4_TCM", "CD4_TCM", "CD4_TCM", "CD4_TCM",
-        "B_naive", "CD4_TCM", "NK", "NK"
-    ],
-    "trait_name": [
-        "breastca_GCST004988", "asthma", "CD_EAS_EUR", "CD_EAS_EUR", "IBD_EAS_EUR", "IBD_EAS_EUR",
-        "asthma", "CD_EAS_EUR", "CD_EAS_EUR", "IBD_EAS_EUR", "IBD_EAS_EUR",
-        "prostateca_GCST90274713", "IBD_EAS_EUR", "CD_EAS_EUR", "IBD_EAS_EUR"
-    ],
-    "Chr": [1, 5, 16, 16, 16, 16, 16, 6, 6, 6, 6, 7, 21, 21, 21],
-    "Peak": [
-        "chr1:121365304-121366060", "chr5:132378406-132379096", "chr16:50337619-50338016", "chr16:50337619-50338016",
-        "chr16:50337619-50338016", "chr16:50337619-50338016", "chr16:27332015-27332584",
-        "chr6:167020258-167020914", "chr6:167020258-167020914", "chr6:167020258-167020914", "chr6:167020258-167020914",
-        "chr7:107560909-107561351", "chr21:44143489-44143752", "chr21:44143489-44143752", "chr21:44143489-44143752"
-    ],
-    "Gene": [
-        None, None, None, None, None, None, None, None, None, None, None,
-        "COG5", "TRAPPC10", "TRAPPC10", None
-    ]
+    "cell_type": ["NK", "NK", "NK"],
+    "Chr": [4, 6, 7],
+    "Peak": ["chr4:55993465-55994658", "chr6:31243369-31243947", "chr7:5897477-5897880"]
 })
+
 
 # Standardize cell type column names to match filtered_df
 gwas_hits_table["cell_type"] = gwas_hits_table["cell_type"].str.replace("_", " ")
@@ -263,289 +266,289 @@ gwas_hits = filtered_df[
     )
 ]
 
-# def load_and_plot_interactions(
-#     variants_df,
-#     output_dir="figures/3-regression/caSNPxPeak-boxplots",
-# ):
-#     """Create boxplots for SNP x EpiAge interactions on chromatin accessibility, with t-test significance."""
-#     os.makedirs(output_dir, exist_ok=True)
-#     print(f"Output directory: {output_dir}")
+def load_and_plot_interactions(
+    variants_df,
+    output_dir="figures/3-regression/caSNPxPeak-boxplots",
+):
+    """Create boxplots for SNP x EpiAge interactions on chromatin accessibility, with t-test significance."""
+    os.makedirs(output_dir, exist_ok=True)
+    print(f"Output directory: {output_dir}")
 
-#     from scipy.stats import ttest_ind
+    from scipy.stats import ttest_ind
 
-#     for i, (idx, row) in enumerate(variants_df.iterrows()):
-#         print(f"\nProcessing variant {i+1}/{len(variants_df)}")
-#         cell_type = row["cell_type_x"]
-#         peak = row["peak"]
-#         snp = row["snp"]
-#         estimate = row["Estimate"]
-#         print(f"Cell type: {cell_type}, Peak: {peak}, SNP: {snp}")
+    for i, (idx, row) in enumerate(variants_df.iterrows()):
+        print(f"\nProcessing variant {i+1}/{len(variants_df)}")
+        cell_type = row["cell_type_x"]
+        peak = row["peak"]
+        snp = row["snp"]
+        estimate = row["Estimate"]
+        print(f"Cell type: {cell_type}, Peak: {peak}, SNP: {snp}")
 
-#         match = re.match(r"^chr(\d+)", peak)
-#         if match:
-#             chr_num = match.group(1)
-#         else:
-#             print(f"Could not extract chromosome number from peak: {peak}")
-#             continue
+        match = re.match(r"^chr(\d+)", peak)
+        if match:
+            chr_num = match.group(1)
+        else:
+            print(f"Could not extract chromosome number from peak: {peak}")
+            continue
 
-#         try:
-#             # Load expression data
-#             expr_file = (
-#                 f"data/expressionBeds/{cell_type}/ExpressionBeds/chr{chr_num}.bed.gz"
-#             )
-#             print(f"Loading expression data from {expr_file}")
-#             expr_df = pd.read_csv(expr_file, sep="\t", compression="gzip", index_col=3)
+        try:
+            # Load expression data
+            expr_file = (
+                f"data/expressionBeds/{cell_type}/ExpressionBeds/chr{chr_num}.bed.gz"
+            )
+            print(f"Loading expression data from {expr_file}")
+            expr_df = pd.read_csv(expr_file, sep="\t", compression="gzip", index_col=3)
 
-#             # Load covariates and epiAge
-#             cov_file = f"data/expressionBeds/{cell_type}/covariates.txt"
-#             print(f"Loading covariates from {cov_file}")
-#             cov_df = pd.read_csv(cov_file, index_col=0).T
-#             cov_df.index = cov_df.index.str.replace("X", "")
+            # Load covariates and epiAge
+            cov_file = f"data/expressionBeds/{cell_type}/covariates.txt"
+            print(f"Loading covariates from {cov_file}")
+            cov_df = pd.read_csv(cov_file, index_col=0).T
+            cov_df.index = cov_df.index.str.replace("X", "")
 
-#             epiage_file = f"data/20250630_epiages/{cell_type}_epiage.txt"
-#             print(f"Loading epiAge data from {epiage_file}")
-#             epiage_df = pd.read_csv(epiage_file, sep="\t").dropna(
-#                 subset=["median_epiage"]
-#             )
-#             epiage_df["epiAge_binary"] = np.where(
-#                 epiage_df["median_epiage"] > 0.5, "Old", "Young"
-#             )
+            epiage_file = f"data/20250630_epiages/{cell_type}_epiage.txt"
+            print(f"Loading epiAge data from {epiage_file}")
+            epiage_df = pd.read_csv(epiage_file, sep="\t").dropna(
+                subset=["median_epiage"]
+            )
+            epiage_df["epiAge_binary"] = np.where(
+                epiage_df["median_epiage"] > 0.5, "Old", "Young"
+            )
 
-#             # Load genotype data efficiently - only read header first to find SNP column
-#             geno_file = f"data/genotype/wgs/TenK10K_TOB_ATAC_renamed_chr{chr_num}_common_variants.raw"
-#             print(f"Loading genotype data from {geno_file}")
+            # Load genotype data efficiently - only read header first to find SNP column
+            geno_file = f"data/genotype/wgs/TenK10K_TOB_ATAC_renamed_chr{chr_num}_common_variants.raw"
+            print(f"Loading genotype data from {geno_file}")
             
-#             # Read header to find which column contains our SNP
-#             with open(geno_file, 'r') as f:
-#                 header = f.readline().strip().split()
+            # Read header to find which column contains our SNP
+            with open(geno_file, 'r') as f:
+                header = f.readline().strip().split()
             
-#             # Find SNP column (may have _A, _G, _T, _C suffix)
-#             snp_cols = [i for i, col in enumerate(header) if col.startswith(snp)]
-#             if not snp_cols:
-#                 print(f"SNP {snp} not found in genotype file headers")
-#                 continue
+            # Find SNP column (may have _A, _G, _T, _C suffix)
+            snp_cols = [i for i, col in enumerate(header) if col.startswith(snp)]
+            if not snp_cols:
+                print(f"SNP {snp} not found in genotype file headers")
+                continue
             
-#             # Load only IID column and the SNP column
-#             iid_col = header.index('IID')
-#             snp_col = snp_cols[0]  # Take first match
-#             usecols = [iid_col, snp_col]
+            # Load only IID column and the SNP column
+            iid_col = header.index('IID')
+            snp_col = snp_cols[0]  # Take first match
+            usecols = [iid_col, snp_col]
             
-#             geno_df = pd.read_csv(geno_file, sep=r"\s+", usecols=usecols, index_col='IID')
-#             geno_df.columns = [header[snp_col].split('_')[0]]  # Clean column name
+            geno_df = pd.read_csv(geno_file, sep=r"\s+", usecols=usecols, index_col='IID')
+            geno_df.columns = [header[snp_col].split('_')[0]]  # Clean column name
 
-#             if peak not in expr_df.index:
-#                 print(f"Peak {peak} not found in expression data for {cell_type}.")
-#                 continue
+            if peak not in expr_df.index:
+                print(f"Peak {peak} not found in expression data for {cell_type}.")
+                continue
             
-#             # Use the cleaned column name (should be the SNP name)
-#             snp_col_name = geno_df.columns[0]
-#             if snp_col_name != snp:
-#                 print(f"Expected SNP {snp} but got column {snp_col_name}")
+            # Use the cleaned column name (should be the SNP name)
+            snp_col_name = geno_df.columns[0]
+            if snp_col_name != snp:
+                print(f"Expected SNP {snp} but got column {snp_col_name}")
 
-#             print("Preparing data for plotting...")
-#             peak_expr = expr_df.loc[peak].iloc[
-#                 3:
-#             ]  # Skip first 3 columns (chr, start, end)
-#             snp_geno = geno_df.iloc[:, 0]  # Get the first (and only) column
+            print("Preparing data for plotting...")
+            peak_expr = expr_df.loc[peak].iloc[
+                3:
+            ]  # Skip first 3 columns (chr, start, end)
+            snp_geno = geno_df.iloc[:, 0]  # Get the first (and only) column
 
-#             # Ensure indices match between peak_expr and snp_geno
-#             common_ids = peak_expr.index.intersection(snp_geno.index)
-#             if len(common_ids) == 0:
-#                 print(
-#                     f"No overlapping individuals between expression and genotype for {cell_type}, {peak}, {snp}."
-#                 )
-#                 continue
+            # Ensure indices match between peak_expr and snp_geno
+            common_ids = peak_expr.index.intersection(snp_geno.index)
+            if len(common_ids) == 0:
+                print(
+                    f"No overlapping individuals between expression and genotype for {cell_type}, {peak}, {snp}."
+                )
+                continue
 
-#             peak_expr = peak_expr.loc[common_ids]
-#             snp_geno = snp_geno.loc[common_ids]
+            peak_expr = peak_expr.loc[common_ids]
+            snp_geno = snp_geno.loc[common_ids]
 
-#             # Merge data
-#             plot_data = pd.DataFrame(
-#                 {
-#                     "ID": peak_expr.index,
-#                     "expr": peak_expr.values,
-#                     "genotype": snp_geno.astype(str),
-#                 }
-#             )
+            # Merge data
+            plot_data = pd.DataFrame(
+                {
+                    "ID": peak_expr.index,
+                    "expr": peak_expr.values,
+                    "genotype": snp_geno.astype(str),
+                }
+            )
 
-#             if "individual" not in epiage_df.columns:
-#                 print(f"'individual' column missing in epiage file for {cell_type}.")
-#                 continue
+            if "individual" not in epiage_df.columns:
+                print(f"'individual' column missing in epiage file for {cell_type}.")
+                continue
 
-#             print("Merging with epiAge data...")
-#             plot_data = plot_data.merge(
-#                 epiage_df[["individual", "epiAge_binary"]],
-#                 left_on="ID",
-#                 right_on="individual",
-#                 how="left",
-#             )
-#             plot_data = plot_data.dropna()
+            print("Merging with epiAge data...")
+            plot_data = plot_data.merge(
+                epiage_df[["individual", "epiAge_binary"]],
+                left_on="ID",
+                right_on="individual",
+                how="left",
+            )
+            plot_data = plot_data.dropna()
 
-#             # Remove rows where genotype is NA before plotting
-#             plot_data = plot_data[plot_data["genotype"].notna()]
-#             plot_data = plot_data[plot_data["genotype"] != "nan"]
+            # Remove rows where genotype is NA before plotting
+            plot_data = plot_data[plot_data["genotype"].notna()]
+            plot_data = plot_data[plot_data["genotype"] != "nan"]
 
-#             # Filter out chromatin accessibility values above threshold
-#             plot_data = plot_data[plot_data["expr"] <= 10]
+            # Filter out chromatin accessibility values above threshold
+            plot_data = plot_data[plot_data["expr"] <= 10]
 
-#             # Order epiAge_binary: Young first, then Old
-#             plot_data["epiAge_binary"] = pd.Categorical(
-#                 plot_data["epiAge_binary"], categories=["Young", "Old"], ordered=True
-#             )
+            # Order epiAge_binary: Young first, then Old
+            plot_data["epiAge_binary"] = pd.Categorical(
+                plot_data["epiAge_binary"], categories=["Young", "Old"], ordered=True
+            )
 
-#             print("Plotting boxplot...")
-#             plt.figure(figsize=(16, 6))
-#             # Set classic theme: white background, no grid, black axes
-#             plt.style.use("default")
-#             ax = plt.gca()
-#             ax.set_facecolor("white")
-#             for spine in ax.spines.values():
-#                 spine.set_visible(True)
-#                 spine.set_color("black")
-#             ax.grid(False)
+            print("Plotting boxplot...")
+            plt.figure(figsize=(8, 8))
+            # Set classic theme: white background, no grid, black axes
+            plt.style.use("default")
+            ax = plt.gca()
+            ax.set_facecolor("white")
+            for spine in ax.spines.values():
+                spine.set_visible(True)
+                spine.set_color("black")
+            ax.grid(False)
 
-#             # Draw boxplot with dodge for space between Young and Old
-#             sns.boxplot(
-#                 data=plot_data,
-#                 x="genotype",
-#                 y="expr",
-#                 hue="epiAge_binary",
-#                 palette={"Young": "#7FB2FF", "Old": "#D6C7A1"},
-#                 order=sorted(plot_data["genotype"].unique()),
-#                 hue_order=["Young", "Old"],
-#                 dodge=True,
-#                 width=0.6,
-#                 fliersize=2,
-#                 linewidth=1.5,
-#                 boxprops=dict(edgecolor="black"),
-#                 medianprops=dict(color="black"),
-#                 whiskerprops=dict(color="black"),
-#                 capprops=dict(color="black"),
-#             )
+            # Draw boxplot with dodge for space between Young and Old
+            sns.boxplot(
+                data=plot_data,
+                x="genotype",
+                y="expr",
+                hue="epiAge_binary",
+                palette={"Young": "#7FB2FF", "Old": "#D6C7A1"},
+                order=sorted(plot_data["genotype"].unique()),
+                hue_order=["Young", "Old"],
+                dodge=True,
+                width=0.6,
+                fliersize=2,
+                linewidth=1.5,
+                boxprops=dict(edgecolor="black"),
+                medianprops=dict(color="black"),
+                whiskerprops=dict(color="black"),
+                capprops=dict(color="black"),
+            )
 
-#             # Add sample counts and t-test significance
-#             xticks = ax.get_xticks()
-#             unique_genotypes = sorted(plot_data["genotype"].unique())
-#             for i_tick, genotype in enumerate(unique_genotypes):
-#                 for j, age_group in enumerate(["Young", "Old"]):
-#                     count = len(
-#                         plot_data[
-#                             (plot_data["genotype"] == genotype)
-#                             & (plot_data["epiAge_binary"] == age_group)
-#                         ]
-#                     )
-#                     if count > 0:
-#                         # Place count above each box
-#                         x_pos = i_tick - 0.2 + 0.4 * j  # Young left, Old right
-#                         ax.text(
-#                             x_pos,
-#                             plot_data["expr"].max() + 0.1,
-#                             str(count),
-#                             ha="center",
-#                             va="bottom",
-#                             fontsize=11,
-#                         )
-#                 # T-test between Young and Old for this genotype
-#                 expr_young = plot_data[
-#                     (plot_data["genotype"] == genotype) & (plot_data["epiAge_binary"] == "Young")
-#                 ]["expr"]
-#                 expr_old = plot_data[
-#                     (plot_data["genotype"] == genotype) & (plot_data["epiAge_binary"] == "Old")
-#                 ]["expr"]
-#                 # Ensure numeric dtype for t-test
-#                 expr_young = pd.to_numeric(expr_young, errors="coerce")
-#                 expr_old = pd.to_numeric(expr_old, errors="coerce")
-#                 expr_young = expr_young.dropna()
-#                 expr_old = expr_old.dropna()
-#                 if len(expr_young) > 1 and len(expr_old) > 1:
-#                     t_stat, p_val = ttest_ind(expr_young, expr_old, equal_var=False)
-#                     # Annotate significance above the boxes
-#                     x_center = i_tick
-#                     y_max = max(expr_young.max() if not expr_young.empty else 0,
-#                                 expr_old.max() if not expr_old.empty else 0)
-#                     y_annot = y_max + 0.3
-#                     if p_val < 0.001:
-#                         sig = "***"
-#                     elif p_val < 0.01:
-#                         sig = "**"
-#                     elif p_val < 0.05:
-#                         sig = "*"
-#                     else:
-#                         sig = "n.s."
-#                     ax.text(
-#                         x_center,
-#                         y_annot,
-#                         sig,
-#                         ha="center",
-#                         va="bottom",
-#                         fontsize=15,
-#                         color="black",
-#                         fontweight="bold",
-#                     )
+            # Add sample counts and t-test significance
+            xticks = ax.get_xticks()
+            unique_genotypes = sorted(plot_data["genotype"].unique())
+            for i_tick, genotype in enumerate(unique_genotypes):
+                for j, age_group in enumerate(["Young", "Old"]):
+                    count = len(
+                        plot_data[
+                            (plot_data["genotype"] == genotype)
+                            & (plot_data["epiAge_binary"] == age_group)
+                        ]
+                    )
+                    if count > 0:
+                        # Place count above each box
+                        x_pos = i_tick - 0.2 + 0.4 * j  # Young left, Old right
+                        ax.text(
+                            x_pos,
+                            plot_data["expr"].max() + 0.1,
+                            str(count),
+                            ha="center",
+                            va="bottom",
+                            fontsize=11,
+                        )
+                # T-test between Young and Old for this genotype
+                expr_young = plot_data[
+                    (plot_data["genotype"] == genotype) & (plot_data["epiAge_binary"] == "Young")
+                ]["expr"]
+                expr_old = plot_data[
+                    (plot_data["genotype"] == genotype) & (plot_data["epiAge_binary"] == "Old")
+                ]["expr"]
+                # Ensure numeric dtype for t-test
+                expr_young = pd.to_numeric(expr_young, errors="coerce")
+                expr_old = pd.to_numeric(expr_old, errors="coerce")
+                expr_young = expr_young.dropna()
+                expr_old = expr_old.dropna()
+                if len(expr_young) > 1 and len(expr_old) > 1:
+                    t_stat, p_val = ttest_ind(expr_young, expr_old, equal_var=False)
+                    # Annotate significance above the boxes
+                    x_center = i_tick
+                    y_max = max(expr_young.max() if not expr_young.empty else 0,
+                                expr_old.max() if not expr_old.empty else 0)
+                    y_annot = y_max + 0.3
+                    if p_val < 0.001:
+                        sig = "***"
+                    elif p_val < 0.01:
+                        sig = "**"
+                    elif p_val < 0.05:
+                        sig = "*"
+                    else:
+                        sig = p_val
+                    ax.text(
+                        x_center,
+                        y_annot,
+                        sig,
+                        ha="center",
+                        va="bottom",
+                        fontsize=15,
+                        color="black",
+                        fontweight="bold",
+                    )
 
-#             # Axis labels and title with subtitle
-#             plt.xlabel("Genotype", fontsize=15)
-#             plt.ylabel("Chromatin Accessibility", fontsize=15)
+            # Axis labels and title with subtitle
+            plt.xlabel("Genotype", fontsize=15)
+            plt.ylabel("Chromatin Accessibility", fontsize=15)
             
-#             # Add title with SNP: chr#:bp
-#             # Extract chromosome and position from SNP name (e.g., '1_200166672_C_G' -> 'chr 1:200166672')
-#             snp_parts = snp.split(":")
-#             if len(snp_parts) >= 2:
-#                 snp_chr_bp = f"chr{snp_parts[0]}:{snp_parts[1]}"
-#             else:
-#                 snp_chr_bp = snp  # fallback
-#             plt.title(f"SNP: {snp_chr_bp}", fontsize=16)
+            # Add title with SNP: chr#:bp
+            # Extract chromosome and position from SNP name (e.g., '1_200166672_C_G' -> 'chr 1:200166672')
+            snp_parts = snp.split(":")
+            if len(snp_parts) >= 2:
+                snp_chr_bp = f"chr{snp_parts[0]}:{snp_parts[1]}"
+            else:
+                snp_chr_bp = snp  # fallback
+            plt.title(f"SNP: {snp_chr_bp}", fontsize=16)
 
-#             plt.xticks(fontsize=14)
-#             plt.yticks(fontsize=14)
+            plt.xticks(fontsize=14)
+            plt.yticks(fontsize=14)
 
-#             # Remove top and right spines for classic look
-#             ax.spines["top"].set_visible(False)
-#             ax.spines["right"].set_visible(False)
+            # Remove top and right spines for classic look
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
 
-#             # Place legend outside the plot
-#             handles, labels = ax.get_legend_handles_labels()
-#             ax.legend(
-#                 handles,
-#                 labels,
-#                 title="EpiAge Group",
-#                 title_fontsize=14,
-#                 fontsize=13,
-#                 loc="center left",
-#                 bbox_to_anchor=(1.02, 0.5),
-#                 borderaxespad=0,
-#                 frameon=False,
-#             )
+            # Place legend outside the plot
+            handles, labels = ax.get_legend_handles_labels()
+            ax.legend(
+                handles,
+                labels,
+                title="EpiAge Group",
+                title_fontsize=14,
+                fontsize=13,
+                loc="center left",
+                bbox_to_anchor=(1.02, 0.5),
+                borderaxespad=0,
+                frameon=False,
+            )
 
-#             plt.tight_layout(rect=[0, 0, 0.85, 1])  # Leave space for legend
+            plt.tight_layout(rect=[0, 0, 0.85, 1])  # Leave space for legend
 
-#             # Add pos_ or neg_ prefix to filename based on Estimate
-#             prefix = "pos_" if estimate > 0 else "neg_"
-#             filename = f"{i+1}_{cell_type}_{peak}_caSNPxPeak_boxplot.png"
-#             plot_path = f"figures/3-regression/gwas_boxplots/{filename}"
-#             print(f"Saving plot to {plot_path}")
-#             plt.savefig(plot_path, dpi=300, bbox_inches="tight")
-#             plt.close()
+            # Add pos_ or neg_ prefix to filename based on Estimate
+            prefix = "pos_" if estimate > 0 else "neg_"
+            filename = f"{i+1}_{cell_type}_{peak}_caSNPxPeak_boxplot.png"
+            plot_path = f"figures/3-regression/gwas_boxplots/{filename}"
+            print(f"Saving plot to {plot_path}")
+            plt.savefig(plot_path, dpi=300, bbox_inches="tight")
+            plt.close()
 
-#             # Explicitly delete large objects and collect garbage to free memory
-#             del expr_df, cov_df, epiage_df, geno_df, peak_expr, snp_geno, plot_data
-#             import gc
-#             gc.collect()
-#             print("Memory cleaned up for this variant.")
+            # Explicitly delete large objects and collect garbage to free memory
+            del expr_df, cov_df, epiage_df, geno_df, peak_expr, snp_geno, plot_data
+            import gc
+            gc.collect()
+            print("Memory cleaned up for this variant.")
 
-#         except Exception as e:
-#             import traceback
-#             print(f"Error plotting {cell_type} {snp}: {e}")
-#             traceback.print_exc()
-#             continue
+        except Exception as e:
+            import traceback
+            print(f"Error plotting {cell_type} {snp}: {e}")
+            traceback.print_exc()
+            continue
 
 # # Plot strongest interactions
 # # print("\nPlotting strongest positive interactions...")
 # # load_and_plot_interactions(strongest_positive)
 
 # # Plot strongest interactions
-# print("\nPlotting GWAS hits...")
-# load_and_plot_interactions(gwas_hits)
+print("\nPlotting GWAS hits...")
+load_and_plot_interactions(gwas_hits)
 
 # # print("Plotting strongest negative interactions...")  
 # # load_and_plot_interactions(strongest_negative)

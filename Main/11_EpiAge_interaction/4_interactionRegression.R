@@ -1,64 +1,94 @@
-# Load packages
-library(lme4)
-library(readr)
-library(lmerTest)  # for p-values
-library(dplyr)
-library(data.table)
-library(tibble)  # for column_to_rownames
-library(purrr)
+#!/usr/bin/env Rscript
 
+#' Genotype × Epigenetic Age Interaction Analysis
+#' 
+#' This script tests for interactions between genetic variants and epigenetic age
+#' on chromatin accessibility. It performs linear regression analysis using 
+#' previously identified caQTLs and epigenetic age estimates.
+#' 
+#' Usage: Rscript 4_interactionRegression.R <cell_type> <chromosome>
+#' 
+#' Author: Peter C Allen
 
-# Define variables
+# Load required libraries
+suppressPackageStartupMessages({
+  library(lme4)
+  library(readr)
+  library(lmerTest)
+  library(dplyr)
+  library(data.table)
+  library(tibble)
+  library(purrr)
+})
+
+# Parse command line arguments
 args <- commandArgs(trailingOnly = TRUE)
+if (length(args) < 2) {
+  stop("Usage: Rscript 4_interactionRegression.R <cell_type> <chromosome>")
+}
+
 cell_type <- args[1]
 chr <- args[2]
 
-# Import data
-# caQTL_pairs <- read.table(paste0('/directflow/SCCGGroupShare/projects/oscdon/TensorQTL/OldPeaks_NewDemultiplexing/Runs/', cell_type, '/Results/TenK10K.sig_cis_qtl_pairs.', chr, '.csv'), header = TRUE)
-# caQTL_pairs <- read.table(paste0('data/caQTL_results/', cell_type, '/Results_1000000/TenK10K.sig_cis_qtl_pairs.', chr, '.csv'), header = TRUE)
-# caQTL_pairs <- caQTL_pairs %>% filter(qval<0.05)
-caQTL_pairs <- read.csv("data/TenK10K.caQTL.1Mb.final_summary_qval005_15jun2025.csv", header = TRUE) %>%
+cat("Analyzing", cell_type, "on", chr, "\n")
+
+# Load caQTL pairs for this cell type
+cat("Loading caQTL data...\n")
+caQTL_pairs <- read.csv("data/TenK10K.caQTL.1Mb.final_summary_qval005_15jun2025.csv") %>%
   filter(cell_types == cell_type)
 
-# Load and format expression data
-# expression_matrix <- fread(paste0("/directflow/SCCGGroupShare/projects/oscdon/TensorQTL/OldPeaks_NewDemultiplexing/Runs/", cell_type, "/ExpressionBeds/", chr, ".bed.gz")) %>% as.data.frame()
-expression_matrix <- fread(paste0("data/expressionBeds/", cell_type, "/ExpressionBeds/", chr, ".bed.gz")) %>% as.data.frame()
-rownames(expression_matrix) <- expression_matrix$phenotype_id
-expression_matrix <- expression_matrix[,-(1:4)]
-expression_matrix <- expression_matrix[na.omit(match(caQTL_pairs$phenotype_id, rownames(expression_matrix))),]
+cat("Found", nrow(caQTL_pairs), "caQTL pairs for", cell_type, "\n")
 
-# Load covariate data
-# covariates_df <- read.csv(paste0("/directflow/SCCGGroupShare/projects/oscdon/TensorQTL/OldPeaks_NewDemultiplexing/Runs/", cell_type, "/covariates.txt")) %>% t()
-covariates_df <- read_csv(paste0("data/expressionBeds/", cell_type, "/covariates.txt"), trim_ws = TRUE) %>% as.data.frame() %>% t()
-colnames(covariates_df) <- covariates_df[1,]
-covariates_df <- covariates_df[-1,]
+# Load chromatin accessibility data
+cat("Loading accessibility data...\n")
+expression_matrix <- fread(paste0("data/expressionBeds/", cell_type, "/ExpressionBeds/", chr, ".bed.gz")) %>% 
+  as.data.frame()
+
+# Format accessibility matrix
+rownames(expression_matrix) <- expression_matrix$phenotype_id
+expression_matrix <- expression_matrix[, -(1:4)]  # Remove coordinate columns
+expression_matrix <- expression_matrix[na.omit(match(caQTL_pairs$phenotype_id, rownames(expression_matrix))), ]
+
+cat("Processing", nrow(expression_matrix), "peaks\n")
+
+# Load and format covariates
+cat("Loading covariates...\n")
+covariates_df <- read_csv(paste0("data/expressionBeds/", cell_type, "/covariates.txt"), trim_ws = TRUE) %>% 
+  as.data.frame() %>% t()
+
+colnames(covariates_df) <- covariates_df[1, ]
+covariates_df <- covariates_df[-1, ]
 rownames(covariates_df) <- gsub("X", "", rownames(covariates_df))
 
-# Convert columns to appropriate types
+# Process covariates
 covariates_df <- as.data.frame(covariates_df) %>%
-  mutate(across(-sex, as.numeric)) %>%  # Convert all columns except 'sex' to numeric
-  mutate(sex = as.factor(ifelse(as.numeric(as.character(sex)) == 1, 1, 2)))  # Ensure 'sex' is either 1 or 2
+  mutate(across(-sex, as.numeric)) %>%  
+  mutate(sex = as.factor(ifelse(as.numeric(as.character(sex)) == 1, 1, 2)))
 
-# Import additional covariate, epiage_sd
+# Load epigenetic age standard deviation (used as covariate)
+cat("Loading epigenetic age variability data...\n")
 epiage_sd <- read.delim(paste0("data/20250630_epiages/", cell_type, "_epiageSD.txt")) %>%
   filter(!is.na(sd_epiage))
 
-# Merge sd_epiage from epiage_sd with covariates_df by individual
+# Merge epigenetic age SD with covariates
 covariates_df <- covariates_df %>%
   rownames_to_column(var = "ID") %>%
   left_join(epiage_sd, by = c("ID" = "individual")) %>%
-  column_to_rownames(var = "ID")
+  column_to_rownames(var = "ID") %>%
+  filter(!is.na(sd_epiage))
 
-covariates_df <- covariates_df %>% filter(!is.na(sd_epiage))
-
-# Import and merge EpiAge data
+# Load median epigenetic age data (the main effect of interest)
+cat("Loading median epigenetic age data...\n")
 epiage <- read.delim(paste0("data/20250630_epiages/", cell_type, "_epiage.txt")) %>%
   filter(!is.na(median_epiage))
 
+# Merge median epigenetic age with covariates
 covariates_df <- covariates_df %>%
   rownames_to_column(var = "ID") %>%
   left_join(epiage, by = c("ID" = "individual")) %>%
   column_to_rownames(var = "ID")
+
+cat("Covariates prepared for", nrow(covariates_df), "individuals\n")
 
 # Import genotypes
 # geno_df <- fread(paste0("data/genotype/hg38/genotypes_chr", chr, ".raw"), header = TRUE, showProgress = TRUE, data.table = FALSE)
@@ -164,5 +194,4 @@ cat("Number of significant results (p.adj < 0.05):", sum(interaction_results$adj
 # Save results
 write.csv(final_results, paste0("output/4-regression-results/", "regression_results_", cell_type, "_", chr, ".csv"), row.names = FALSE)
 write.csv(interaction_results, paste0("output/4-regression-results/", "interaction_results_", cell_type, "_", chr, ".csv"), row.names = FALSE)
-# write.csv(final_results, paste0("output/3_regression/", "SNP_regression_results_", cell_type, "_", chr, ".csv"), row.names = FALSE)
-# write.csv(interaction_results, paste0("output/3_regression/", "SNP_specific_results_", cell_type, "_", chr, ".csv"), row.names = FALSE)
+
