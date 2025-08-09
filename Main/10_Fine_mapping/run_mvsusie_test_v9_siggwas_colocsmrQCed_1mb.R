@@ -159,16 +159,11 @@ doFinemapping <- function(anchor_gene) {
         for (i in 1:length(fit$sets$cs)) {
             cs_name <- names(fit$sets$cs)[i]
             cs_indices <- fit$sets$cs[[i]]
-
-            # Create named vector of SNPs with PIPs
+            
             snp_pips <- fit$pip[cs_indices]
             names(snp_pips) <- overlapping_snps[cs_indices]
-
-            # Get traits info
             lfsr <- fit$single_effect_lfsr[as.numeric(substring(cs_name,2)), ]
             sig_traits <- colnames(Z)[lfsr < 0.01]
-
-            # Store CS info as layer 2
             results_list[[cs_name]] <- list(
                 snps = snp_pips,  # Named vector with PIPs
                 top_snp = names(snp_pips)[which.max(snp_pips)],
