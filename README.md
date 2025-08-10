@@ -107,6 +107,7 @@ In total, there are 238 scATAC-seq libraries from 119 pools
 Note: each pool contains 8 donors and was sequenced twice to increase the number of nuclei captured per donor
 
 
-
+## Citation
+Xue et al. Genetic regulation of cell type–specific chromatin accessibility shapes immune function and disease risk. _Preprint coming soon_. 2025.
 
 
