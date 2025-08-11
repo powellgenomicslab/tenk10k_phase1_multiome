@@ -1,0 +1,240 @@
+
+library(data.table)
+
+args = commandArgs(trailingOnly=TRUE)
+trait <- args[1]
+# cell_type_input <- args[2]
+
+# Define condition names
+pheno_names <- c(
+  "alzheimer_GCST90027158",
+  "breastca_GCST004988",
+  "covid_GCST011071",
+  "lungca_GCST004748",
+  "lymphoma_GCST90018878",
+  "parkinson_GCST009325",
+  "prostateca_GCST90274713",
+  "ra_GCST90132223",
+  "sle_GCST003156",
+  "nephrotic_GCST90258619",
+  "kiryluk_IgAN",
+  "asthma",
+  "ms",
+  "t1dm",
+  "CD_EAS_EUR",
+  "IBD_EAS_EUR",
+  "UC_EAS_EUR"
+)
+
+# Define corresponding local filenames
+pheno_files <- c(
+  "GCST90027158.h_parsed",
+  "GCST004988.h_parsed",
+  "GCST011071_parsed",
+  "GCST004748.h_parsed",
+  "GCST90018878.h_parsed",
+  "GCST009325.h_parsed",
+  "GCST90274713.h_parsed",
+  "GCST90132223_parsed",
+  "bentham_2015_26502338_sle_parsed",
+  "nephrotic_GCST90258619_parsed",
+  "Kiryluk_IgAN_parsed",
+  "asthma",
+  "ms",
+  "t1dm",
+  "CD_EAS_EUR",
+  "IBD_EAS_EUR",
+  "UC_EAS_EUR"
+)
+
+mapping <- setNames(pheno_names, pheno_files)
+
+plink_result_dir <- "/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/coloc_SMR_compare/PLINK_clumping/plink_output/disease_traits/"
+eQTL_result_basedir <- "/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/output/main_analyses_OldGenotypes_not_used_for_final_manuscript/preprocessing_eQTL/"
+caQTL_result_basedir <- "/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/output/main_analyses_NewGenotypes/preprocessing_caQTL_rawID/"
+
+eQTL_coloc_result_basedir <- "/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/coloc_SMR_compare/Coloc_finalresults/disease_eQTL_GWAS/"
+caQTL_coloc_result_basedir <- "/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/coloc_SMR_compare/Coloc_finalresults/disease_caQTL_GWAS/"
+eQTL_SMR_result_basedir <- "/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/output/main_analyses_NewGenotypes/GWAS_eQTL/"
+caQTL_SMR_result_basedir <- "/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/output/main_analyses_NewGenotypes/GWAS_run_rawID/"
+
+trait_list <- pheno_files
+cell_type_list <- sort(list.files(caQTL_SMR_result_basedir))
+cell_type_list_dual <- paste0(rep(cell_type_list, each = 2), c("_eQTL", "_caQTL"))
+cell_type_list_dual <- c("Union_eQTL", "Union_caQTL", "Num_GWAS_loci", "Shared", "Specific_eQTL", "Specific_caQTL", cell_type_list_dual)
+
+# Create empty matrix with trait_list as rows and cell_type_list as columns
+coloc_table <- matrix(NA, nrow = length(trait_list), ncol = length(cell_type_list_dual))
+rownames(coloc_table) <- pheno_names
+colnames(coloc_table) <- cell_type_list_dual
+coloc_table <- as.data.frame(coloc_table)
+smr_table <- matrix(NA, nrow = length(trait_list), ncol = length(cell_type_list_dual))
+rownames(smr_table) <- pheno_names
+colnames(smr_table) <- cell_type_list_dual
+smr_table <- as.data.frame(smr_table)
+
+#for (trait in trait_list) {
+
+sig_SNP_union <- list()
+eQTL_coloc_union <- list()
+caQTL_coloc_union <- list()
+eQTL_smr_union <- list()
+caQTL_smr_union <- list()
+
+coloc_folder_name <- mapping[trait]
+
+# cell_type_list <- c("CD4_Naive", "CD14_Mono")
+
+# dir.create(paste0("/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/coloc_SMR_compare/PLINK_clumping/sta_output_final/disease_traits/SNP_list/", 
+#                   coloc_folder_name), showWarnings = FALSE)
+
+for (cell_type in cell_type_list) {
+  
+  eQTL_result_dir <- paste0(eQTL_result_basedir, cell_type, "/matrixQTL/")
+  caQTL_result_dir <- paste0(caQTL_result_basedir, cell_type, "/matrixQTL/")
+  
+  eQTL_SMR_result_dir <- paste0(eQTL_SMR_result_basedir, cell_type, "/disease_traits/", trait, "/")
+  caQTL_SMR_result_dir <- paste0(caQTL_SMR_result_basedir, cell_type, "/disease_traits/", trait, "/")
+  
+  sig_SNP_union_ct <- list()
+  eQTL_coloc_union_ct <- list()
+  caQTL_coloc_union_ct <- list()
+  eQTL_smr_union_ct <- list()
+  caQTL_smr_union_ct <- list()
+  
+  for (chr in seq(1, 22)) {
+    
+    print(paste0(trait, cell_type, chr))
+    # Read the significant SNP list from PLINK clumping outputs
+    if (file.exists(file.path(plink_result_dir, trait, paste0("clumped_chr", chr, ".clumped"))) == FALSE) {
+      next
+    }
+    plink_df <- fread(file.path(plink_result_dir, trait, paste0("clumped_chr", chr, ".clumped")))
+    sig_SNP_list <- unique(plink_df$SNP)
+    sig_SNP_union_ct <- c(sig_SNP_union_ct, sig_SNP_list)
+    
+    # Read eQTL-GWAS coloc results
+    if (file.exists(file.path(eQTL_coloc_result_basedir, coloc_folder_name, cell_type, paste0("chr", chr, ".csv"))) == FALSE) {
+      next
+    }
+    eQTL_coloc_df <- fread(file.path(eQTL_coloc_result_basedir, coloc_folder_name, cell_type, paste0("chr", chr, ".csv")))
+    if (nrow(eQTL_coloc_df) == 0) {
+      next
+    }
+    eQTL_coloc_df[, PP.H3H4 := PP.H3.abf + PP.H4.abf]
+    # eQTL_coloc_df <- eQTL_coloc_df[PP.H3H4 > 0.8]
+    eQTL_coloc_df <- eQTL_coloc_df[PP.H4.abf > 0.8]
+    
+    # Read caQTL-GWAS coloc results
+    if (file.exists(file.path(caQTL_coloc_result_basedir, coloc_folder_name, cell_type, paste0("chr", chr, ".csv"))) == FALSE) {
+      next
+    }
+    caQTL_coloc_df <- fread(file.path(caQTL_coloc_result_basedir, coloc_folder_name, cell_type, paste0("chr", chr, ".csv")))
+    if (nrow(caQTL_coloc_df) == 0) {
+      next
+    }
+    caQTL_coloc_df[, PP.H3H4 := PP.H3.abf + PP.H4.abf]
+    # caQTL_coloc_df <- caQTL_coloc_df[PP.H3H4 > 0.8]
+    caQTL_coloc_df <- caQTL_coloc_df[PP.H4.abf > 0.8]
+    
+    # Read eQTL-GWAS SMR results
+    if (file.exists(file.path(eQTL_SMR_result_dir, paste0("Chr", chr, "_results.smr"))) == FALSE) {
+      next
+    }
+    eQTL_smr_df <- fread(file.path(eQTL_SMR_result_dir, paste0("Chr", chr, "_results.smr")))
+    eQTL_smr_df <- eQTL_smr_df[eQTL_smr_df$p_SMR < (0.005 / nrow(eQTL_smr_df))]
+    eQTL_smr_df <- eQTL_smr_df[eQTL_smr_df$p_HEIDI > 5e-8]
+    
+    # Read caQTL-GWAS SMR results
+    if (file.exists(file.path(caQTL_SMR_result_dir, paste0("Chr", chr, "_results.smr"))) == FALSE) {
+      next
+    }
+    caQTL_smr_df <- fread(file.path(caQTL_SMR_result_dir, paste0("Chr", chr, "_results.smr")))
+    caQTL_smr_df <- caQTL_smr_df[caQTL_smr_df$p_SMR < (0.005 / nrow(caQTL_smr_df))]
+    caQTL_smr_df <- caQTL_smr_df[caQTL_smr_df$p_HEIDI > 5e-8]
+    
+    # Find genes holding significant eQTLs with PLINK sig SNPs
+    eQTL_df <- fread(file.path(eQTL_result_dir, paste0("Chr", chr, "_MatrixcaQTL.tsv")))
+    eQTL_df <- eQTL_df[eQTL_df$'p-value' < 5e-8]
+    eQTL_df <- eQTL_df[SNP %in% sig_SNP_list]
+    sig_genes_eQTL <- unique(eQTL_df$gene)
+    
+    # Find peaks holding significant caQTLs with PLINK sig SNPs
+    caQTL_df <- fread(file.path(caQTL_result_dir, paste0("Chr", chr, "_MatrixcaQTL.tsv")))
+    caQTL_df <- caQTL_df[caQTL_df$'p-value' < 5e-8]
+    caQTL_df <- caQTL_df[SNP %in% sig_SNP_list]
+    sig_peaks_caQTL <- unique(caQTL_df$peak)
+    
+    # Get the list of sig SNPs colocalized with eQTL_coloc
+    eQTL_coloc_sig_genes <- unique(eQTL_coloc_df[gene %in% sig_genes_eQTL]$gene)
+    eQTL_coloc_sig_SNPs <- unique(eQTL_df[gene %in% eQTL_coloc_sig_genes]$SNP)
+    eQTL_coloc_union_ct <- c(eQTL_coloc_union_ct, eQTL_coloc_sig_SNPs)
+    
+    # Get the list of sig SNPs colocalized with caQTL_coloc
+    caQTL_coloc_sig_peaks <- unique(caQTL_coloc_df[peak %in% sig_peaks_caQTL]$peak)
+    caQTL_coloc_sig_SNPs <- unique(caQTL_df[peak %in% caQTL_coloc_sig_peaks]$SNP)
+    caQTL_coloc_union_ct <- c(caQTL_coloc_union_ct, caQTL_coloc_sig_SNPs)
+    
+    # Get the list of sig SNPs colocalized with eQTL_SMR
+    eQTL_smr_sig_genes <- unique(eQTL_smr_df[probeID %in% sig_genes_eQTL]$probeID)
+    eQTL_smr_sig_SNPs <- unique(eQTL_df[gene %in% eQTL_smr_sig_genes]$SNP)
+    eQTL_smr_union_ct <- c(eQTL_smr_union_ct, eQTL_smr_sig_SNPs)
+    
+    # Get the list of sig SNPs colocalized with caQTL_SMR
+    caQTL_smr_sig_peaks <- unique(caQTL_smr_df[probeID %in% sig_peaks_caQTL]$probeID)
+    caQTL_smr_sig_SNPs <- unique(caQTL_df[peak %in% caQTL_smr_sig_peaks]$SNP)
+    caQTL_smr_union_ct <- c(caQTL_smr_union_ct, caQTL_smr_sig_SNPs)
+  }
+  
+  # print(eQTL_coloc_union_ct)
+  # print(caQTL_smr_union_ct)
+  # writeLines(as.character(sig_SNP_union_ct), paste0("/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/coloc_SMR_compare/PLINK_clumping/sta_output_final/disease_traits/SNP_list/", 
+  #                                     coloc_folder_name, "/", cell_type, "_GWAS_loci.txt"))
+  # writeLines(as.character(eQTL_coloc_union_ct), paste0("/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/coloc_SMR_compare/PLINK_clumping/sta_output_final/disease_traits/SNP_list/", 
+  #                                     coloc_folder_name, "/", cell_type, "_eQTL_coloc_loci.txt"))
+  # writeLines(as.character(caQTL_coloc_union_ct), paste0("/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/coloc_SMR_compare/PLINK_clumping/sta_output_final/disease_traits/SNP_list/", 
+  #                                        coloc_folder_name, "/", cell_type, "_caQTL_coloc_loci.txt"))
+  # writeLines(as.character(eQTL_smr_union_ct), paste0("/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/coloc_SMR_compare/PLINK_clumping/sta_output_final/disease_traits/SNP_list/", 
+  #                                        coloc_folder_name, "/", cell_type, "_eQTL_smr_loci.txt"))
+  # writeLines(as.character(caQTL_smr_union_ct), paste0("/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/coloc_SMR_compare/PLINK_clumping/sta_output_final/disease_traits/SNP_list/", 
+  #                                         coloc_folder_name, "/", cell_type, "_caQTL_smr_loci.txt"))
+  
+  sig_SNP_union <- c(sig_SNP_union, sig_SNP_union_ct)
+  eQTL_coloc_union <- c(eQTL_coloc_union, eQTL_coloc_union_ct)
+  caQTL_coloc_union <- c(caQTL_coloc_union, caQTL_coloc_union_ct)
+  eQTL_smr_union <- c(eQTL_smr_union, eQTL_smr_union_ct)
+  caQTL_smr_union <- c(caQTL_smr_union, caQTL_smr_union_ct)
+  
+  coloc_table[coloc_folder_name, paste0(cell_type, "_eQTL")] <- length(eQTL_coloc_union_ct)
+  coloc_table[coloc_folder_name, paste0(cell_type, "_caQTL")] <- length(caQTL_coloc_union_ct)
+  smr_table[coloc_folder_name, paste0(cell_type, "_eQTL")] <- length(eQTL_smr_union_ct)
+  smr_table[coloc_folder_name, paste0(cell_type, "_caQTL")] <- length(caQTL_smr_union_ct)
+}
+
+coloc_table[coloc_folder_name, "Union_eQTL"] <- length(unique(eQTL_coloc_union))
+coloc_table[coloc_folder_name, "Union_caQTL"] <- length(unique(caQTL_coloc_union))
+coloc_table[coloc_folder_name, "Num_GWAS_loci"] <- length(unique(sig_SNP_union))
+smr_table[coloc_folder_name, "Union_eQTL"] <- length(unique(eQTL_smr_union))
+smr_table[coloc_folder_name, "Union_caQTL"] <- length(unique(caQTL_smr_union))
+smr_table[coloc_folder_name, "Num_GWAS_loci"] <- length(unique(sig_SNP_union))
+
+# add qtl-specific and shared
+shared_coloc_union <- intersect(unique(eQTL_coloc_union), unique(caQTL_coloc_union))
+eQTL_coloc_union_spec <- setdiff(unique(eQTL_coloc_union), unique(caQTL_coloc_union))
+caQTL_coloc_union_spec <- setdiff(unique(caQTL_coloc_union), unique(eQTL_coloc_union))
+shared_smr_union <- intersect(unique(eQTL_smr_union), unique(caQTL_smr_union))
+eQTL_smr_union_spec <- setdiff(unique(eQTL_smr_union), unique(caQTL_smr_union))
+caQTL_smr_union_spec <- setdiff(unique(caQTL_smr_union), unique(eQTL_smr_union))
+# union(eQTL_coloc_union, caQTL_coloc_union)
+
+coloc_table[coloc_folder_name, "Shared"] <- length(unique(shared_coloc_union))
+coloc_table[coloc_folder_name, "Specific_eQTL"] <- length(unique(eQTL_coloc_union_spec))
+coloc_table[coloc_folder_name, "Specific_caQTL"] <- length(unique(caQTL_coloc_union_spec))
+smr_table[coloc_folder_name, "Shared"] <- length(unique(shared_smr_union))
+smr_table[coloc_folder_name, "Specific_eQTL"] <- length(unique(eQTL_smr_union_spec))
+smr_table[coloc_folder_name, "Specific_caQTL"] <- length(unique(caQTL_smr_union_spec))
+
+# }
+
+write.csv(coloc_table, paste0("/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/coloc_SMR_compare/PLINK_clumping/sta_output_final/disease_traits/table_H4_newGWAS/coloc_", coloc_folder_name, ".csv"), row.names = TRUE)
+write.csv(smr_table, paste0("/directflow/SCCGGroupShare/projects/jayfan/Projects/Multiome/tenk10k_phase1/SMR/coloc_SMR_compare/PLINK_clumping/sta_output_final/disease_traits/table_H4_newGWAS/smr_", coloc_folder_name, ".csv"), row.names = TRUE)
