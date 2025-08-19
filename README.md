@@ -10,7 +10,7 @@ TenK10K is a population cohort that will profile single-cell RNA-seq data of ~50
 <!-- potentially also from [HOPE Research Program](https://www.garvan.org.au/research/collaboration/hope-research) -->
 This repository will contain the analysis code for computational and statistical analyses of TenK10K phase 1 ATAC/multiome data, with a focus on caQTL (i.e., SNPs associated with chromatin accessibility levels) and multi-omics integration.
 
-We will include 952 TOB individuals for scATAC-seq, 36 BioHeart Individuals and 27 LIBIO individuals for muliome data.
+We will include 952 TOB individuals for scATAC-seq, 64 BioHeart Individuals and 26 LIBIO individuals for muliome data.
 
 <br>
 
@@ -22,9 +22,9 @@ We obtained PBMCs of 1015 individuals from three sets of scATAC/Multiome data fr
 
 **TOB**: 952 donors, 119 pools (238 libraries) and 8 individuals per pool (generated in 2024)
 
-**BioHeart**: 48 donors, 3 pools and 16 individuals per pool (generated back in 2022)
+**BioHeart**: 64 donors, 4 pools and 16 individuals per pool (generated in 2022)
 
-**LIBIO**: 27 donors, 4 pools and 6-8 individuals per pool (generated back in 2023)
+**LIBIO**: 26 donors, 4 pools and 6-8 individuals per pool (generated in 2023)
 
 ## Preprocessing
 
@@ -41,17 +41,34 @@ We obtained PBMCs of 1015 individuals from three sets of scATAC/Multiome data fr
 - Peak calling by MACS2
 - DNA accessibility process by latent semantic indexing (LSI)
 - Create a gene activity matrix
-- Clustering using Azimuth / label transferring
+- Clustering using Azimuth/label transferring
 - Verify with scRNA-seq data
 - Generate Peak Count matrix
 
 ## caQTL mapping
 
-- To be updated
+- Generate pseudobulk matrix by summing up the ATAC count within each donor
+- Correct GC content
+- Convert corrected count data to CPM values and normalize the matrix per peak
+- Merge the  two repeats and estimate principal components
+- Perform caQTL with TensorQTL per cell type, fitting covariates
+
+## Colocalization
+
+## Causal inference
+
+## Fine-mapping causal variants
+
+## Cell state-dependent effects
 
 ## Gene regulatory network inference
 
-- To be updated
+- Aggregated scRNA-seq and scATAC-seq data per cell type and preprocessed following GLUE’s recommended pipeline
+- Constructed a baseline model linking ATAC peaks to genes based on genomic proximity (±150 kb) and eQTL evidence
+- Applied GLUE to integrate multi-omics data and infer cis-regulatory peak–gene interactions.
+- Built cell type–specific gene regulatory networks (GRNs)
+- Incorporated caQTL–eQTL colocalization and SMR results to refine regulatory links and recover additional TF–target relationships.
+- Compared cis-regulatory scores between paired and unpaired multiome datasets, integrating GTEx and cell type–specific eQTLs in model training
 
 # Data generation tracking (scATAC-seq for TOB cohort)
 1st batch: Received on Aug 12nd 2024 (`240807`). 8 libraries from 4 pools.
@@ -87,9 +104,10 @@ We obtained PBMCs of 1015 individuals from three sets of scATAC/Multiome data fr
 
 In total, there are 238 scATAC-seq libraries from 119 pools
 
-Note: each pool contains 8 donors and was captured/sequenced twice
+Note: each pool contains 8 donors and was sequenced twice to increase the number of nuclei captured per donor
 
 
-
+# Citation
+Xue et al. Genetic regulation of cell type–specific chromatin accessibility shapes immune function and disease risk. _Preprint coming soon_. 2025.
 
 
