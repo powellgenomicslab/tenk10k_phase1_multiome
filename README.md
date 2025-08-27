@@ -110,4 +110,8 @@ Note: each pool contains 8 donors and was sequenced twice to increase the number
 # Citation
 Xue et al. Genetic regulation of cell type–specific chromatin accessibility shapes immune function and disease risk. _Preprint coming soon_. 2025.
 
+# Contact
+Please send all enquiries regarding this study to the corresponding authors:
+Angli Xue (a.xue@garvan.org.au) and Joseph Powell (j.powell@garvan.org.au)
+
 
