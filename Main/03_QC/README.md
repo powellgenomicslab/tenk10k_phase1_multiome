@@ -7,4 +7,8 @@ Nuclei that failed the following quality control thresholds were excluded from a
 This script converts 10X Genomics ATAC-seq outputs for all TOB cohort libraries into Seurat objects, integrating fragment and metadata files while adding demultiplexing results from Vireo. It then calculates standard QC metrics including nucleosome signal, TSS enrichment, fraction of reads in peaks, and blacklist ratios, and saves both the Seurat object and its metadata for downstream analysis.
 
 
+`atac_02_qc.R`
 
+This script performs regular QC on previously generated ATAC-seq Seurat objects by removing doublets and low-quality cells based on metrics such as peak counts, TSS enrichment, nucleosome signal, and fraction of reads in peaks, and saves the filtered objects. It then applies normalization, dimensionality reduction, clustering, UMAP visualization, and generates a gene activity matrix to enable RNA-based feature analysis and downstream interpretation.
+
+The `*.qsub.sh` scripts are bash scripts to submit array jobs in HPC.
