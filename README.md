@@ -1,5 +1,9 @@
 # TenK10K phase1 multiome data processing
 
+## Summary
+This analysis pipeline processes single-cell ATAC-seq and multiome data from 1,015 individuals across three cohorts (TOB, BioHeart, LBIO) to identify chromatin accessibility quantitative trait loci (caQTLs) and understand genetic regulation of immune cell function. The pipeline performs comprehensive analyses including demultiplexing, cell type annotation, peak calling, caQTL mapping, colocalization with GWAS traits, causal inference, fine-mapping, and gene regulatory network inference to link genetic variants to chromatin accessibility and disease risk.
+
+## Background
 TenK10K is a population cohort that will profile single-cell RNA-seq data of ~50 million peripheral blood mononuclear cells (PBMCs) from 10,000 individuals in Australia. This cohort will collect
 - 5,000 healthy donors, an extended version of the [OneK1K cohort](https://www.science.org/doi/10.1126/science.abf3041)
 - 2,000 individuals with coronary artery disease, the [BioHeart cohort](https://bmjopen.bmj.com/content/9/9/e028649)
