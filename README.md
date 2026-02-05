@@ -10,7 +10,7 @@ TenK10K is a population cohort that will profile single-cell RNA-seq data of ~50
 <!-- potentially also from [HOPE Research Program](https://www.garvan.org.au/research/collaboration/hope-research) -->
 This repository will contain the analysis code for computational and statistical analyses of TenK10K phase 1 ATAC/multiome data, with a focus on caQTL (i.e., SNPs associated with chromatin accessibility levels) and multi-omics integration.
 
-We processed 952 TOB individuals for scATAC-seq, 64 BioHeart individuals, and 26 LIBIO individuals for muliome data.
+In the phase 1 multiome project, we processed 952 TOB individuals for scATAC-seq, 64 BioHeart individuals, and 26 LIBIO individuals for muliome data.
 
 <br>
 
