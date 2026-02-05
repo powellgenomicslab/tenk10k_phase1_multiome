@@ -3,7 +3,7 @@
 TenK10K is a population cohort that will profile single-cell RNA-seq data of ~50 million peripheral blood mononuclear cells (PBMCs) from 10,000 individuals in Australia. This cohort will collect
 - 5,000 healthy donors, an extended version of the [OneK1K cohort](https://www.science.org/doi/10.1126/science.abf3041)
 - 2,000 individuals undergoing clinically indicated CT coronary angiogram, the [BioHeart cohort](https://bmjopen.bmj.com/content/9/9/e028649)
-- 1,500 samples from a pan-cancer cohort, the LBIO study (~500 donors, 1~5 timepoints for each)
+- 1,500 samples from a pan-cancer cohort, the LBIO study (500 donors, 1~5 timepoints for each)
 - 1,000 individuals from a pan-autoimmune disease cohort, the [AIM study](https://bmjopen.bmj.com/content/11/2/e042493.long)
 - 600 samples from a long-COVID cohort, the [ADAPT study](https://www.svhs.org.au/research-education/participating-in-research-trials/adapt-study)
 
@@ -14,7 +14,7 @@ We processed 952 TOB individuals for scATAC-seq, 64 BioHeart individuals, and 26
 
 <br>
 
-![Tenk10K](https://github.com/powellgenomicslab/tenk10k_phase1_multiome/blob/main/Figures/TenK10K_icon_poster.png)
+![Tenk10K](https://github.com/powellgenomicslab/tenk10k_phase1_multiome/blob/main/Figures/TenK10K%20-%20Phase%201%20cohort.png)
 
 # Main data for this project
 
