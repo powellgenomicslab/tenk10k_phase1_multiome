@@ -28,53 +28,9 @@ We obtained PBMCs of 1042 individuals from three sets of scATAC/Multiome data fr
 
 After quality controls, 922 TOB donors were used for caQTL mapping and 60 donors (BioHeart + LBIO) were used for replication.
 
-## Preprocessing
-
-- Reads alignment (cell ranger ARC)
-- Ambient RNA detection
-- Demultiplexing and doublet detection
-- Cell type annotation
-- Batch correction
-- Multi-omics layers integration
-- QC & Normalisation
-
-## ATAC-seq processing
-
-- Peak calling by MACS2
-- DNA accessibility process by latent semantic indexing (LSI)
-- Create a gene activity matrix
-- Clustering using Azimuth/label transferring
-- Verify with scRNA-seq data
-- Generate Peak Count matrix
-
-## caQTL mapping
-
-- Generate pseudobulk matrix by summing up the ATAC count within each donor
-- Correct GC content
-- Convert corrected count data to CPM values and normalize the matrix per peak
-- Merge the  two repeats and estimate principal components
-- Perform caQTL with TensorQTL per cell type, fitting covariates
-
-## Colocalization
-
-## Causal inference
-
-## Fine-mapping causal variants
-
-## Cell state-dependent effects
-
-## Gene regulatory network inference
-
-- Aggregated scRNA-seq and scATAC-seq data per cell type and preprocessed following GLUE’s recommended pipeline
-- Constructed a baseline model linking ATAC peaks to genes based on genomic proximity (±150 kb) and eQTL evidence
-- Applied GLUE to integrate multi-omics data and infer cis-regulatory peak–gene interactions.
-- Built cell type–specific gene regulatory networks (GRNs)
-- Incorporated caQTL–eQTL colocalization and SMR results to refine regulatory links and recover additional TF–target relationships.
-- Compared cis-regulatory scores between paired and unpaired multiome datasets, integrating GTEx and cell type–specific eQTLs in model training
-
 # Data availability
 We are currently preparing the data sharing, including full caQTL summary statistics (both common and rare variants), fine-mapping, coloc, SMR, peak-gene links, and GRN inference results.
-The Zenodo link will be posted here around mid-March 2026.
+The download link will be posted here in May 2026.
 
 # Citation
 Xue et al. Genetic regulation of cell type–specific chromatin accessibility shapes immune function and disease risk. [medRxiv](https://www.medrxiv.org/content/10.1101/2025.08.27.25334533v1). 2025.
