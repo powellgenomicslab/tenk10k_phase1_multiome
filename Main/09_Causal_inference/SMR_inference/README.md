@@ -71,3 +71,51 @@ This module operates downstream of:
 ---
 
 ## 🔄 Workflow
+---
+
+## 📊 Inputs
+
+- caQTL summary statistics (tensor format)
+- eQTL summary statistics
+- GWAS summary statistics (disease and blood traits)
+- LD reference panel
+
+---
+
+## 📤 Outputs
+
+- SMR association results (effect sizes, p-values)
+- HEIDI test results (heterogeneity p-values)
+- Prioritised:
+  - peak–gene links
+  - gene–trait associations
+  - regulatory mechanisms
+
+---
+
+## ⚙️ Key Dependencies
+
+- SMR software (e.g., GCTA-SMR)
+- R
+- Bash
+
+---
+
+## 🧬 Interpretation
+
+Results from different steps can be combined to support causal chains such as:
+
+SNP → chromatin accessibility → gene expression → disease
+
+---
+
+## 📚 References
+
+- Zhu et al., 2016 — SMR method
+- TenK10K Phase 1 multiome project
+
+---
+
+## 🚀 Usage
+
+Scripts can be run individually or as part of a larger pipeline (e.g., HPC batch jobs). It is recommended to execute them sequentially following the workflow above.
