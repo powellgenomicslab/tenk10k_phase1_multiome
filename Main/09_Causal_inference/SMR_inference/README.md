@@ -6,7 +6,7 @@ The SMR framework integrates **molecular QTL signals (e.g., eQTL / caQTL)** with
 
 ---
 
-## 🔬 Overview
+## Overview
 
 The SMR analysis aims to:
 
@@ -24,7 +24,7 @@ This module operates downstream of:
 
 ---
 
-## 📁 File Structure
+## File Structure
 
 ### Data Preparation
 
@@ -70,10 +70,10 @@ This module operates downstream of:
 
 ---
 
-## 🔄 Workflow
+## Workflow
 ---
 
-## 📊 Inputs
+## Inputs
 
 - caQTL summary statistics (tensor format)
 - eQTL summary statistics
@@ -82,7 +82,7 @@ This module operates downstream of:
 
 ---
 
-## 📤 Outputs
+## Outputs
 
 - SMR association results (effect sizes, p-values)
 - HEIDI test results (heterogeneity p-values)
@@ -93,7 +93,7 @@ This module operates downstream of:
 
 ---
 
-## ⚙️ Key Dependencies
+## Key Dependencies
 
 - SMR software (e.g., GCTA-SMR)
 - R
@@ -101,7 +101,7 @@ This module operates downstream of:
 
 ---
 
-## 🧬 Interpretation
+## Interpretation
 
 Results from different steps can be combined to support causal chains such as:
 
@@ -109,7 +109,7 @@ SNP → chromatin accessibility → gene expression → disease
 
 ---
 
-## 📚 References
+## References
 
 - Zhu et al., 2016 — SMR method
 - TenK10K Phase 1 multiome project
