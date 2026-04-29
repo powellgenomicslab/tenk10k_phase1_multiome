@@ -116,6 +116,6 @@ SNP → chromatin accessibility → gene expression → disease
 
 ---
 
-## 🚀 Usage
+## Usage
 
 Scripts can be run individually or as part of a larger pipeline (e.g., HPC batch jobs). It is recommended to execute them sequentially following the workflow above.
