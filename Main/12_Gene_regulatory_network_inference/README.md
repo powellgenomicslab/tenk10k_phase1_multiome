@@ -12,7 +12,7 @@ The pipeline combines:
 
 ---
 
-## 🔬 Overview
+## Overview
 
 The goal of this pipeline is to infer **cell-type-specific regulatory networks** by integrating:
 
@@ -29,10 +29,7 @@ This enables reconstruction of regulatory relationships:
 
 ---
 
-## 📁 File Structure
----
-
-## ⚙️ Pipeline Steps
+## Pipeline Steps
 
 ### 1. Preprocessing and Prior Construction  
 **`s01_preprocessing.py`**
@@ -112,11 +109,11 @@ Outputs:
 
 ---
 
-## 🔄 Workflow
+## Workflow
 
 ---
 
-## 📊 Inputs
+## Inputs
 
 - scRNA-seq data (`.h5ad`)
 - scATAC-seq data (`.h5ad`)
@@ -127,7 +124,7 @@ Outputs:
 
 ---
 
-## 📤 Outputs
+## Outputs
 
 - Processed multiome datasets  
 - Prior regulatory graphs  
@@ -138,7 +135,7 @@ Outputs:
 
 ---
 
-## ⚙️ Dependencies
+## Dependencies
 
 - Python (3.8+)
 - scanpy  
@@ -152,7 +149,7 @@ Outputs:
 
 ---
 
-## 🚀 Usage
+## Usage
 
 Scripts are designed to be run sequentially:
 
