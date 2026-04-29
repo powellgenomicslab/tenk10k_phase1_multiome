@@ -9,11 +9,11 @@ The pipeline is organised into two main modules:
 
 ---
 
-## 📁 Directory Structure
+## Directory Structure
 
 ---
 
-## 🔬 Modules
+## Modules
 
 ### 1. SMR_inference
 
@@ -32,7 +32,7 @@ This module supports analyses such as:
 - caQTL ↔ GWAS (chromatin-mediated effects)  
 - eQTL ↔ GWAS (expression-mediated effects)  
 
-👉 See `SMR_inference/README.md` for details.
+See `SMR_inference/README.md` for details.
 
 ---
 
@@ -52,7 +52,7 @@ This module includes:
 - Visualisation of colocalisation signals  
 ---
 
-## 🔄 Analysis Strategy
+## Analysis Strategy
 
 These two modules are complementary:
 
@@ -65,7 +65,7 @@ Together, they provide a robust framework for identifying:
 
 ---
 
-## ⚙️ Requirements
+## Requirements
 
 - R  
 - Bash  
