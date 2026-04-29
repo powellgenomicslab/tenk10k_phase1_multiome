@@ -11,10 +11,6 @@ The pipeline is organised into two main modules:
 
 ## Directory Structure
 
----
-
-## Modules
-
 ### 1. SMR_inference
 
 Implements **Summary-based Mendelian Randomisation (SMR)** analyses to:
