@@ -1,0 +1,126 @@
+
+import pandas as pd
+import re
+import warnings
+import os
+import xml.etree.ElementTree as ET
+
+# ⚙️ functions 
+
+def get_sequencing_date(bcl_dir):
+    """
+    extract the sequencing date from the bcl_dir path 
+    """
+    if not os.path.isdir(bcl_dir):
+        raise FileNotFoundError(f"bcl_dir: '{bcl_dir}' provided in config file does not exist.")
+    else:
+        pattern = r'(\d{6})_'
+        sequencing_date = re.search(pattern, bcl_dir).group(1)
+        return sequencing_date 
+
+def get_flowcell_id(bcl_dir):
+    """
+    Parses the flowcell ID from the RunInfo.xml file.
+
+    Parameters:
+    bcl_dir (str): Path to the bcl directory
+
+    Returns:
+    str: The flowcell ID.
+    """
+    # NOTE: there is also a run ID in the xml which may be a more unique identifier?
+
+    runinfo_path = os.path.join(bcl_dir, "RunInfo.xml")
+    try:
+        tree = ET.parse(runinfo_path)
+        root = tree.getroot()
+        flowcell_id = root.find('Run').find('Flowcell').text
+        return flowcell_id
+    except Exception as e:
+        print(f"Error parsing {runinfo_path}: {e}")
+        return None
+
+def get_fsid(bcl_dir):
+    ilummina_sample_sheet_path = os.path.join(bcl_dir, "SampleSheet.csv")
+    illumina_sample_sheet_df = pd.read_csv(ilummina_sample_sheet_path, skiprows=9) # read in [Data] section
+    fsid=illumina_sample_sheet_df.loc[:,"Sample_Name"]
+    # check only one fsid exists
+    if fsid.empty:
+        raise ValueError(f"FS-id not found in the metadata: {ilummina_sample_sheet_path}")
+    if len(fsid) > 1:
+        raise ValueError(f"Multiple FSID entries found in metadata: '{ilummina_sample_sheet_path}'. Expected only one.")
+    else:
+        return fsid.squeeze()
+
+def make_samplesheet_csv(fsid, mastertable, output_name):
+    """make samplesheet using the data queried from aritable in the format required by cellranger mkfastq
+
+    Args:
+        fsid (str): FluidX tube ID, unique for each flowcell. 
+        output_name (str): path to output file 
+    """
+    master_df = pd.read_csv(mastertable, index_col=0)
+    master_df['Lane'] = '*'
+    sample_sheet_df = (
+        master_df
+            .loc[master_df['FluidX ID'] == fsid, ['Lane', 'sample_id_cellranger', 'Index']]
+            .rename(columns={'sample_id_cellranger':'Sample'})
+    )
+    print(sample_sheet_df)
+    sample_sheet_df.to_csv(output_name, index=False)
+
+def get_samples(fsid, mastertable):
+    """
+    get set of samples from sample sheet 
+    """
+
+    master_df = pd.read_csv(mastertable, index_col=0)
+    samples = (master_df.loc[master_df['FluidX ID'] == fsid, 'sample_id_cellranger'])
+
+    if(samples.duplicated().any()):
+        warnings.warn("The samplesheet contains duplicated sample names. These will be combined by mkfastq.", UserWarning)
+
+    return set(samples)
+
+# 📏 rules
+
+rule all:
+    input:
+        # sample sheets
+        expand("{sample_sheet_dir}/sample_sheet_{sequencing_date}_{flowcell_id}.csv",
+            sample_sheet_dir=config["sample_sheet_dir"],
+            sequencing_date=get_sequencing_date(config['bcl_dir']),
+            flowcell_id=get_flowcell_id(config['bcl_dir'])),
+        # fastq output
+        expand("{fastq_outdir}/{sequencing_date}_{flowcell_id}/{flowcell_id}",
+            fastq_outdir=config['fastqs'], 
+            sequencing_date=get_sequencing_date(config['bcl_dir']),
+            flowcell_id=get_flowcell_id(config['bcl_dir'])),
+        # atac count output 
+        expand("{count_outdir}/{sequencing_date}_{flowcell_id}/{sample}/outs", 
+            count_outdir=config["atac_count_outdir"], 
+            sequencing_date=get_sequencing_date(config['bcl_dir']),
+            flowcell_id=get_flowcell_id(config['bcl_dir']),
+            sample=get_samples(get_fsid(config["bcl_dir"]), config["mastertable"]))
+
+rule make_samplesheet:
+    input:
+        sample_sheet_dir=config["sample_sheet_dir"],
+        bcl_dir=config["bcl_dir"],
+        mastertable=config["mastertable"]
+    output:
+        sample_sheet=os.path.join(config["sample_sheet_dir"], "sample_sheet_{sequencing_date}_{flowcell_id}.csv")
+    resources:
+        localcores=1, # each job uses max resources for a for cascade lake node 
+        localmem=8,
+        queue="normal",
+        job_storage_gb=10, 
+        walltime="00:20:00",
+        iointensive=0
+    run:
+        # NOTE: can't use conda environment with "run"
+        fsid=get_fsid(config["bcl_dir"])
+        make_samplesheet_csv(fsid, input.mastertable, output.sample_sheet)
+
+include: "rules/mkfastq.smk"
+include: "rules/cellranger_atac.smk"
