@@ -19,7 +19,7 @@ The workflow:
 - `1_celltype_fragments.R`  
   Extracts cell type-specific fragments from each library using metadata annotations.
 
-- `2_combine_fragments.qsub.sh`  
+- `2_combine_fragments.sh`  
   Concatenates per-library fragment files into one combined fragment file per cell type.
 
 - `3_MACS3.py`  
