@@ -29,8 +29,11 @@ We obtained PBMCs of 1042 individuals from three sets of scATAC/Multiome data fr
 After quality controls, 922 TOB donors were used for caQTL mapping and 60 donors (BioHeart + LBIO) were used for replication.
 
 # Data availability
-We are currently preparing the data sharing, including full caQTL summary statistics (both common and rare variants), fine-mapping, coloc, SMR, peak-gene links, and GRN inference results.
-The download link will be posted here in May 2026.
+We released all key summary results on the Hugging Face platform, including full caQTL summary statistics (both common and rare variants), caQTL replication results, fine-mapping, coloc, SMR, cell state analysis, peak-gene links, and GRN inference results.
+
+The download link is on https://huggingface.co/datasets/anglixue/TenK10K_multiome
+
+The raw scRNA-seq, scATAC-seq, and WGS data will be under managed access through the EGA platform. The study IDs are EGAS50000001653 (TenK10K Phase 1:  Single Cell data), EGAS50000001654 (Tenk10k Phase 1: Whole Genome Sequencing data).
 
 # Citation
 Xue et al. Genetic regulation of cell type–specific chromatin accessibility shapes immune function and disease risk. [medRxiv](https://www.medrxiv.org/content/10.1101/2025.08.27.25334533v1). 2025.
