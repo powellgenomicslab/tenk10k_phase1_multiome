@@ -3,12 +3,13 @@
 This folder contains the scripts and helper functions to perform caQTL mapping using SAIGE-based association tests. The workflow is split into three main parts:
 
 - `Phenotypes/` — generate and prepare phenotype (pseudobulk) matrices and peak lists. **Run this first.**
+- `VRE/` — prepare variant-region extraction inputs used for downstream association testing. **Run this after `Phenotypes/`, but before `Unconditional/` or `Conditional/`.**
 - `Unconditional/` — run unconditional (single-variant) association tests and combine results.
 - `Conditional/` — run conditional association tests (if conditional analyses are required) and combine results.
 
 There is also a helper `qval_functions.R` used to compute q-values/FDR across results.
 
-##Overview of key scripts:
+## Overview of key scripts:
 
 `Phenotypes/`
 
@@ -24,6 +25,15 @@ There is also a helper `qval_functions.R` used to compute q-values/FDR across re
   - Combine per-chromosome or per-chunk files into unified phenotype files.
 - `4_get_peak_lists.R`
   - Generate final peak lists/bed files used to define phenotype regions.
+
+`VRE/`
+
+- `1_get_VRE_plink.sh`
+  - Generate PLINK files for variant-region extraction workflows.
+- `2_combine_variants.sh`
+  - Combine variant files for downstream use.
+- `3_get_regions.R`
+  - Build region lists used by later association testing steps.
 
 `Unconditional/`
 
@@ -59,6 +69,8 @@ There is also a helper `qval_functions.R` used to compute q-values/FDR across re
 
 1. Run the entire `Phenotypes/` pipeline to produce phenotype matrices and peak lists. This step is required before any association testing can proceed.
 
-2. Run either `Unconditional/` or `Conditional/` depending on your analysis plan:
+2. Run `VRE/` to prepare the variant-region extraction inputs needed for downstream analysis.
+
+3. Run either `Unconditional/` or `Conditional/` depending on your analysis plan:
    - For a standard single-variant scan, run `Unconditional/`.
    - If you need conditional analyses, run `Conditional/` after producing the SNP lists to condition on
