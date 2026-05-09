@@ -6,9 +6,9 @@
 4. Cell type annotation
 5. Recall peaks within each cell type
 6. Pseudobulking
-7. caQTL mapping
-8. Colocalisation
-9. Causal inference
-10. Fine-mapping
-11. Epigenetic age interaction
-12. Gene regulatory network inference
+7. caQTL mapping (common + rare)
+8. Colocalisation (coloc)
+9. Causal inference (SMR)
+10. Fine-mapping (SuSiE + mvSuSiE)
+11. Cell state-dependent caQTL (Epigenetic age, pseudotime, SAIGE-Dynamic)
+12. Gene regulatory network inference (GLUE, pgBoost)
