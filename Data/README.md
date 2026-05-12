@@ -33,3 +33,11 @@
 In total, there are 238 scATAC-seq libraries from 119 pools
 
 Note: each pool contains 8 donors and was sequenced twice to increase the number of nuclei captured per donor
+
+# Raw Data availability
+The raw scRNA-seq, scATAC-seq, and WGS data will be under managed access through the EGA platform. The study IDs are EGAS50000001653 (TenK10K Phase 1:  Single Cell data), EGAS50000001654 (Tenk10k Phase 1: Whole Genome Sequencing data).
+
+# Summary Data availability
+We released all key summary results on the Hugging Face platform, including full caQTL summary statistics (both common and rare variants), caQTL replication results, fine-mapping, coloc, SMR, cell state analysis, peak-gene links, and GRN inference results.
+
+The download link is on https://huggingface.co/datasets/anglixue/TenK10K_multiome
