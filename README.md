@@ -36,7 +36,7 @@ The download link is on https://huggingface.co/datasets/anglixue/TenK10K_multiom
 The raw scRNA-seq, scATAC-seq, and WGS data will be under managed access through the EGA platform. The study IDs are EGAS50000001653 (TenK10K Phase 1:  Single Cell data), EGAS50000001654 (Tenk10k Phase 1: Whole Genome Sequencing data).
 
 # Citation
-Xue et al. Genetic regulation of cell type–specific chromatin accessibility shapes immune function and disease risk. [medRxiv](https://www.medrxiv.org/content/10.1101/2025.08.27.25334533v1). 2025.
+Xue et al. Genetic regulation of cell type–specific chromatin accessibility shapes immune function and disease risk. [medRxiv](https://www.medrxiv.org/content/10.1101/2025.08.27.25334533v2). 2025.
 
 # Contact
 Please send all enquiries regarding this study to the corresponding authors:
