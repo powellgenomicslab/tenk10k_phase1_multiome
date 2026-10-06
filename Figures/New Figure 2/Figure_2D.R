@@ -1,5 +1,3 @@
-
-
 #### Creat coverage plot for a gene of interest with a SNP highlighted
 suppressPackageStartupMessages({
   library(Seurat)
